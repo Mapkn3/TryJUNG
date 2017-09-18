@@ -1,5 +1,55 @@
-/**
- * Created by Kondrat on 18.09.2017.
- */
+import edu.uci.ics.jung.graph.DelegateTree;
+import edu.uci.ics.jung.graph.Tree;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TreeGenerator {
+    private int k;
+    private int count;
+    private boolean isRegular;
+    private boolean isRuleA;
+
+    public TreeGenerator(int k, int count, boolean isRegular, boolean isRuleA) {
+        this.k = k;
+        this.count = count;
+        this.isRegular =isRegular;
+        this.isRuleA = isRuleA;
+    }
+
+    public Tree<Integer, String> generate() {
+        boolean isEnd = false;
+        int id = 1;
+        ArrayDeque<Integer> queue = new ArrayDeque<>();
+        List<Integer> childList = new ArrayList<>();
+        DelegateTree<Integer, String> tree = new DelegateTree<>();
+        tree.addVertex(id);
+        queue.addLast(id);
+        while (!isEnd || !queue.isEmpty()) {
+            if (queue.isEmpty() && childList.isEmpty()) {
+                break;
+            }
+            if (queue.isEmpty()) {
+                queue.addAll(childList);
+                childList.clear();
+            }
+            int parent_id = queue.pollFirst();
+            int countChild = isRegular ? this.k : /* -> */ this.k /* <- */ ;//TODO add random
+            for (int i = 0; i < countChild; i++) {
+                id++;
+                tree.addChild(id + "-" + parent_id, parent_id, id);
+                childList.add(id);
+                if (id == this.count) {
+                    isEnd = true;
+                }
+                if (this.isRuleA && isEnd) {
+                    childList.clear();
+                    queue.clear();
+                    break;
+                }
+            }
+        }
+        return tree;
+    }
 }
