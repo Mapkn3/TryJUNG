@@ -4,6 +4,7 @@ import edu.uci.ics.jung.graph.Tree;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class TreeGenerator {
     private int k;
@@ -19,6 +20,7 @@ public class TreeGenerator {
     }
 
     public Tree<Integer, String> generate() {
+        Random random = new Random();
         boolean isEnd = false;
         int id = 1;
         ArrayDeque<Integer> queue = new ArrayDeque<>();
@@ -35,7 +37,7 @@ public class TreeGenerator {
                 childList.clear();
             }
             int parent_id = queue.pollFirst();
-            int countChild = isRegular ? this.k : /* -> */ this.k /* <- */ ;//TODO add random
+            int countChild = isRegular ? this.k : random.nextInt(this.k);
             for (int i = 0; i < countChild; i++) {
                 id++;
                 tree.addChild(id + "-" + parent_id, parent_id, id);
