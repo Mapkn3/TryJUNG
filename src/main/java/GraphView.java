@@ -14,8 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GraphView extends JFrame {
     private int k;
@@ -25,15 +25,17 @@ public class GraphView extends JFrame {
     private int r;
     private final ScalingControl scaler = new CrossoverScalingControl();
 
-    private int[] randomGist;
-    private List apex;
-    private List regularApex;
+    private int[] randomHist;
+    private List<Integer> apexList;
+    private List<Integer> regularApexList;
     private boolean isStart;
+    private RandomHistogram randomHistogram;
+    private ApexLineChart apexLineChart;
 
     private JPanel graphViewPanel;
     private JPanel scalePanel;
     private JPanel controlPanel;
-    private JPanel gistPanel;
+    private JPanel histPanel;
     private JPanel diagramPanel;
     private JPanel mainPanel;
     private JPanel graphPanel;
@@ -50,10 +52,14 @@ public class GraphView extends JFrame {
 
         this.isStart = true;
 
-        this.randomGist = new int[this.k];
-        this.apex = new ArrayList<>();
+        this.randomHist = new int[this.k];
+        this.apexList = new ArrayList<>();
+        this.regularApexList = new ArrayList<>();
 
-        treeGenerator = new TreeGenerator(k, count, isRegular, isRuleA);
+        this.randomHistogram = new RandomHistogram();
+        this.apexLineChart = new ApexLineChart();
+
+        this.treeGenerator = new TreeGenerator(k, count, isRegular, isRuleA);
         $$$setupUI$$$();
         init();
     }
@@ -72,21 +78,16 @@ public class GraphView extends JFrame {
         if (isStart) {
             generator = new TreeGenerator(k, count, true, isRuleA);
         }
-        Tree<Integer, String> tree = generator.generate(apex, randomGist);
+        Tree<Integer, String> tree = generator.generate(isStart ? regularApexList : apexList, randomHist);
+
         while (tree.getVertexCount() <= 10) {
-            tree = generator.generate(apex, randomGist);
+            tree = generator.generate(isStart ? regularApexList : apexList, randomHist);
         }
-
-        StringBuilder str = new StringBuilder();
-        for (int i : randomGist) {
-            str.append(i).append(" ");
+        this.randomHistogram.setDataset(randomHist);
+        if (isStart) {
+            this.apexLineChart.setRegularApexList(regularApexList);
         }
-        System.out.println(str.toString());
-
-        for (int i = 0; i < apex.size(); i++) {
-            System.out.println(i + ": " + apex.get(i));
-        }
-        //TODO: work with randomGist and apex
+        this.apexLineChart.setApexList(apexList);
         return tree;
     }
 
@@ -158,10 +159,20 @@ public class GraphView extends JFrame {
         return controlPanel;
     }
 
+    private JPanel createRandomHistogramPanel() {
+        return randomHistogram.getHistogram();
+    }
+
+    private JPanel createApexLineChartPanel() {
+        return apexLineChart.getApexLineChart();
+    }
+
     private void createUIComponents() {
         graphPanel = createGraphPanel();
         scalePanel = createScalePanel();
         controlPanel = createControlPanel();
+        histPanel = createRandomHistogramPanel();
+        diagramPanel = createApexLineChartPanel();
     }
 
     /**
@@ -177,16 +188,12 @@ public class GraphView extends JFrame {
         mainPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         graphViewPanel = new JPanel();
         graphViewPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        mainPanel.add(graphViewPanel, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 2, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        mainPanel.add(graphViewPanel, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 2, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(400, 500), new Dimension(400, 500), null, 2, false));
         graphViewPanel.add(scalePanel, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         graphViewPanel.add(controlPanel, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         graphViewPanel.add(graphPanel, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        diagramPanel = new JPanel();
-        diagramPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
         mainPanel.add(diagramPanel, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        gistPanel = new JPanel();
-        gistPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        mainPanel.add(gistPanel, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        mainPanel.add(histPanel, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
     }
 
     /**
