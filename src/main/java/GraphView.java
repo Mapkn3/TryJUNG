@@ -157,7 +157,7 @@ public class GraphView extends JFrame {
             }
         });
 
-        JButton autogenerateButton = new JButton("Autogenerate " + String.valueOf(this.r) + " times");
+        JButton autogenerateButton = new JButton("Autogenerate " + String.valueOf(this.r-this.counter) + " times");
         autogenerateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -175,13 +175,18 @@ public class GraphView extends JFrame {
     }
 
     private void generateTreeRTimes() {
-        generateTrees(this.r);
+        generateTrees(this.r-this.counter+1);
     }
 
     private void generateTrees(int count) {
-        for (int i = 0; i < count; i++) {
-            $$$setupUI$$$();
-            init();
+        if (this.counter <= this.r) {
+            System.out.println(this.counter != this.r);
+            System.out.println(this.counter);
+            System.out.println(this.r);
+            for (int i = 0; i < count; i++) {
+                $$$setupUI$$$();
+                init();
+            }
         }
     }
 
@@ -212,8 +217,8 @@ public class GraphView extends JFrame {
         File file = new File(folder.getPath()+"\\"+String.valueOf(this.counter)+".txt");
         List<Integer> apexList = treeModel.getApexList();
         try(FileWriter writer = new FileWriter(file, false)) {
-            int countVertex = apexList.size();
-            int countApex = apexList.get(countVertex-1);
+            int countVertex = apexList.size()-1;
+            int countApex = apexList.get(countVertex);
             double alpha = (countVertex*1.0)/countApex;
             int height = treeModel.getTree().getHeight();
             writer.write(String.valueOf(alpha)+"\n");
