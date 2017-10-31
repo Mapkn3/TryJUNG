@@ -1,5 +1,4 @@
 import edu.uci.ics.jung.graph.DelegateTree;
-import edu.uci.ics.jung.graph.Tree;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -19,12 +18,14 @@ public class TreeGenerator {
         this.isRuleA = isRuleA;
     }
 
-    public Tree<Integer, String> generate(List<Integer> apex, int[] randomGist) {
+    public TreeModel generate() {
+        TreeModel treeModel = new TreeModel();
+        List<Integer> apex = new ArrayList<>();
+        int[] randomHist = new int[this.k];
+        List<String> treeTable = new ArrayList<>();
+        List<String> treeRow = new ArrayList<>();
+        List<String> treeApex = new ArrayList<>();
         Random random = new Random();
-        for (int i = 0; i < randomGist.length; i++) {
-            randomGist[i] = 0;
-        }
-        apex.clear();
         apex.add(0);
         boolean isEnd = false;
         int id = 1;
@@ -34,22 +35,31 @@ public class TreeGenerator {
         tree.addVertex(id);
         apex.add(countApex(tree));
         queue.addLast(id);
+        treeRow.add("1-0");
+        treeTable.add(treeRow.toString());
+        treeRow.clear();
         while (!isEnd || !queue.isEmpty()) {
             if (queue.isEmpty() && childList.isEmpty()) {
                 break;
             }
             if (queue.isEmpty()) {
+                treeTable.add(treeRow.toString());
+                treeRow.clear();
                 queue.addAll(childList);
                 childList.clear();
             }
             int parent_id = queue.pollFirst();
             int countChild = isRegular ? (this.k - 1) : random.nextInt(this.k);
-            randomGist[countChild]++;
+            if (countChild == 0) {
+                treeApex.add(parent_id + "-" + tree.getParent(parent_id));
+            }
+            randomHist[countChild]++;
             for (int i = 0; i < countChild; i++) {
                 id++;
                 tree.addChild(id + "-" + parent_id, parent_id, id);
                 apex.add(countApex(tree));
                 childList.add(id);
+                treeRow.add(id + "-" + parent_id);
                 if (id == this.count) {
                     isEnd = true;
                 }
@@ -60,7 +70,14 @@ public class TreeGenerator {
                 }
             }
         }
-        return tree;
+        treeApex.addAll(treeRow);
+        treeRow.clear();
+        treeModel.setTree(tree);
+        treeModel.setApexList(apex);
+        treeModel.setRandomHist(randomHist);
+        treeModel.setTreeTable(treeTable);
+        treeModel.setApexTable(treeApex);
+        return treeModel;
     }
 
     private int countApex(DelegateTree<Integer, String> tree) {

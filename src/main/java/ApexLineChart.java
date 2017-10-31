@@ -24,6 +24,14 @@ public class ApexLineChart {
         this.apexList = apex;
     }
 
+    public List<Integer> getRegularApexList() {
+        return regularApexList;
+    }
+
+    public List<Integer> getApexList() {
+        return apexList;
+    }
+
     public ChartPanel getApexLineChart() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         if (this.regularApexList != null) {
@@ -37,7 +45,7 @@ public class ApexLineChart {
             int count = this.apexList.size();
             dataset.addValue(0, "Apex", String.valueOf(0));
             for (int i = 1; i < count; i++) {
-                dataset.addValue(((i*0.1)/this.apexList.get(i)), "Apex", String.valueOf(i));
+                dataset.addValue(((i*1.0)/this.apexList.get(i)), "Apex", String.valueOf(i));
             }
         }
         JFreeChart lineChart = ChartFactory.createLineChart(

@@ -14,20 +14,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 public class GraphView extends JFrame {
+    private TreeModel treeModel;
     private int k;
     private int count;
     private boolean isRegular;
     private boolean isRuleA;
     private int r;
+    private int counter;
     private final ScalingControl scaler = new CrossoverScalingControl();
 
-    private int[] randomHist;
-    private List<Integer> apexList;
-    private List<Integer> regularApexList;
     private boolean isStart;
     private RandomHistogram randomHistogram;
     private ApexLineChart apexLineChart;
@@ -49,12 +50,9 @@ public class GraphView extends JFrame {
         this.isRegular = false;
         this.isRuleA = false;
         this.r = 200;
+        this.counter = 0;
 
         this.isStart = true;
-
-        this.randomHist = new int[this.k];
-        this.apexList = new ArrayList<>();
-        this.regularApexList = new ArrayList<>();
 
         this.randomHistogram = new RandomHistogram();
         this.apexLineChart = new ApexLineChart();
@@ -78,16 +76,22 @@ public class GraphView extends JFrame {
         if (isStart) {
             generator = new TreeGenerator(k, count, true, isRuleA);
         }
-        Tree<Integer, String> tree = generator.generate(isStart ? regularApexList : apexList, randomHist);
-
-        while (tree.getVertexCount() <= 10) {
-            tree = generator.generate(isStart ? regularApexList : apexList, randomHist);
+        treeModel = generator.generate();
+        while (treeModel.getTree().getVertexCount() <= 10) {
+            treeModel = generator.generate();
         }
-        this.randomHistogram.setDataset(randomHist);
+        Tree<Integer, String> tree = treeModel.getTree();
+        this.randomHistogram.setDataset(treeModel.getRandomHist());
         if (isStart) {
-            this.apexLineChart.setRegularApexList(regularApexList);
+            this.apexLineChart.setRegularApexList(treeModel.getApexList());
+        } else {
+            this.apexLineChart.setApexList(treeModel.getApexList());
+        }List<String> treeTable = treeModel.getTreeTable();
+        for (String row : treeTable) {
+            System.out.println(row);
         }
-        this.apexLineChart.setApexList(apexList);
+        List<String> apexTable = treeModel.getApexTable();
+        System.out.println("Apex: " + apexTable);
         return tree;
     }
 
@@ -149,14 +153,36 @@ public class GraphView extends JFrame {
         generateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                $$$setupUI$$$();
-                init();
-
+                generateTrees(1);
             }
         });
 
-        controlPanel.add(generateButton);
+        JButton autogenerateButton = new JButton("Autogenerate " + String.valueOf(this.r) + " times");
+        autogenerateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generateTreeRTimes();
+            }
+        });
+
+        saveTree();
+        JLabel counterLabel = new JLabel(String.valueOf(this.counter++));
+
+        controlPanel.add(generateButton, BorderLayout.WEST);
+        controlPanel.add(autogenerateButton, BorderLayout.CENTER);
+        controlPanel.add(counterLabel, BorderLayout.EAST);
         return controlPanel;
+    }
+
+    private void generateTreeRTimes() {
+        generateTrees(this.r);
+    }
+
+    private void generateTrees(int count) {
+        for (int i = 0; i < count; i++) {
+            $$$setupUI$$$();
+            init();
+        }
     }
 
     private JPanel createRandomHistogramPanel() {
@@ -173,6 +199,38 @@ public class GraphView extends JFrame {
         controlPanel = createControlPanel();
         histPanel = createRandomHistogramPanel();
         diagramPanel = createApexLineChartPanel();
+    }
+
+    private void saveTree() {
+        File folder = new File("C:\\Users\\Kondrat\\Desktop\\Trees\\");
+        if (isStart) {
+            for(File f : folder.listFiles()) {
+                f.delete();
+            }
+        }
+        folder.mkdir();
+        File file = new File(folder.getPath()+"\\"+String.valueOf(this.counter)+".txt");
+        List<Integer> apexList = treeModel.getApexList();
+        try(FileWriter writer = new FileWriter(file, false)) {
+            int countVertex = apexList.size();
+            int countApex = apexList.get(countVertex-1);
+            double alpha = (countVertex*1.0)/countApex;
+            int height = treeModel.getTree().getHeight();
+            writer.write(String.valueOf(alpha)+"\n");
+            writer.append(String.valueOf(countVertex)).append("\n");
+            writer.append(String.valueOf(countApex)).append("\n");
+            writer.append(String.valueOf(height)).append("\n");
+            List<String> treeTable = treeModel.getTreeTable();
+            for (String row : treeTable) {
+                writer.append(row).append("\n");
+            }
+            List<String> apexTable = treeModel.getApexTable();
+            writer.append("Apex: ").append(String.valueOf(apexTable)).append("\n");
+            writer.flush();
+        }
+        catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
