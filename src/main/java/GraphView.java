@@ -147,17 +147,11 @@ public class GraphView extends JFrame {
     }
 
     private JPanel createControlPanel() {
+        saveTree();
+
         JPanel controlPanel = new JPanel(new BorderLayout());
 
-        JButton generateButton = new JButton("Generate");
-        generateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                generateTrees(1);
-            }
-        });
-
-        JButton autogenerateButton = new JButton("Autogenerate " + String.valueOf(this.r-this.counter) + " times");
+        JButton autogenerateButton = new JButton("Autogenerate " + ((this.counter < this.r)?"next " + String.valueOf(this.r - this.counter) + " tree":"is off"));
         autogenerateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -165,12 +159,31 @@ public class GraphView extends JFrame {
             }
         });
 
-        saveTree();
-        JLabel counterLabel = new JLabel(String.valueOf(this.counter++));
+        JButton generateButton = new JButton("Generate " + ((this.counter < this.r)?"tree №" + String.valueOf(++this.counter):"is off"));
+        generateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generateTrees(1);
+            }
+        });
+
+        JButton closeButton = new JButton("Use Python");
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Runtime.getRuntime().exec("python extract.py");
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
 
         controlPanel.add(generateButton, BorderLayout.WEST);
         controlPanel.add(autogenerateButton, BorderLayout.CENTER);
-        controlPanel.add(counterLabel, BorderLayout.EAST);
+        if (this.counter == this.r) {
+            controlPanel.add(closeButton, BorderLayout.EAST);
+        }
         return controlPanel;
     }
 
@@ -179,10 +192,7 @@ public class GraphView extends JFrame {
     }
 
     private void generateTrees(int count) {
-        if (this.counter <= this.r) {
-            System.out.println(this.counter != this.r);
-            System.out.println(this.counter);
-            System.out.println(this.r);
+        if (this.counter < this.r) {
             for (int i = 0; i < count; i++) {
                 $$$setupUI$$$();
                 init();
