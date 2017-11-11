@@ -9,6 +9,8 @@ import edu.uci.ics.jung.visualization.control.ModalGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingControl;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import org.jfree.chart.ChartColor;
+import org.jfree.chart.ChartUtilities;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class GraphView extends JFrame {
@@ -45,13 +48,17 @@ public class GraphView extends JFrame {
 
 
     public GraphView() {
-        this.k = 5;
-        this.count = 150;
-        this.isRegular = false;
-        this.isRuleA = false;
-        this.r = 200;
-        this.counter = 0;
+        this(5, 150, false, 200);
+    }
 
+    public GraphView(int k, int count, boolean isRuleA, int r) {
+        this.k = k;
+        this.count = count;
+        this.isRuleA = isRuleA;
+        this.r = r;
+
+        this.counter = 0;
+        this.isRegular = false;
         this.isStart = true;
 
         this.randomHistogram = new RandomHistogram();
@@ -81,12 +88,26 @@ public class GraphView extends JFrame {
             treeModel = generator.generate();
         }
         Tree<Integer, String> tree = treeModel.getTree();
+
+        this.randomHistogram.setRandomHistogramColor(ChartColor.LIGHT_GREEN);
         this.randomHistogram.setDataset(treeModel.getRandomHist());
+
+        this.apexLineChart.setRegularApexLineColor(ChartColor.DARK_BLUE);
+        this.apexLineChart.setApexLineColor(ChartColor.LIGHT_CYAN);
         if (isStart) {
             this.apexLineChart.setRegularApexList(treeModel.getApexList());
         } else {
             this.apexLineChart.setApexList(treeModel.getApexList());
-        }List<String> treeTable = treeModel.getTreeTable();
+        }
+
+        Field[] fileds = ChartColor.class.getFields();
+        for (Field field : fileds) {
+            if (field.toString().contains("ChartColor")){
+                System.out.println(field.getName());
+            }
+        }
+
+        List<String> treeTable = treeModel.getTreeTable();
         for (String row : treeTable) {
             System.out.println(row);
         }
@@ -173,6 +194,8 @@ public class GraphView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     Runtime.getRuntime().exec("python extract.py");
+                    System.out.println("Document created.");
+                    dispose();
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
@@ -242,6 +265,13 @@ public class GraphView extends JFrame {
             List<String> apexTable = treeModel.getApexTable();
             writer.append("Apex: ").append(String.valueOf(apexTable)).append("\n");
             writer.flush();
+
+            int widthImg = 640;
+            int heightImg = 480;
+            File apexLineChartFile = new File( folder.getPath()+"\\"+String.valueOf(this.counter)+"_a.jpeg" );
+            ChartUtilities.saveChartAsJPEG(apexLineChartFile, apexLineChart.getLineChart(), widthImg, heightImg);
+            File randomHistogramFile = new File( folder.getPath()+"\\"+String.valueOf(this.counter)+"_h.jpeg" );
+            ChartUtilities.saveChartAsJPEG(randomHistogramFile, randomHistogram.getRandomHistogram(), widthImg, heightImg);
         }
         catch(IOException e) {
             System.out.println(e.getMessage());

@@ -4,7 +4,7 @@ public class TryMain {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new GraphView();
+                new TreeConfigurator();
             }
         });
     }
